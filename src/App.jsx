@@ -117,9 +117,9 @@ function App() {
           <p className="description">A free, authentic and respectful dating experience designed for real connections.</p>
           <div className="scroll-indicator"><div className="scroll-arrow">↓</div></div>
         </div>
-      </section>
-
-      {/* VISION & SOLUTION */}
+          <h1 className="title">Bienvenue sur NexTo</h1>
+          <p className="subtitle">Matche. Aime. Supprime.</p>
+          <p className="description">Une expérience de rencontre gratuite, authentique et respectueuse conçue pour de vraies connexions.</p>
       <section className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
         <div className="content">
           <div className="emoji">💡</div>
