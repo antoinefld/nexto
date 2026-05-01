@@ -112,9 +112,9 @@ function App() {
           <div className="logo-hero">
             <img src={logoSmallNexto} alt="NexTo Logo" />
           </div>
-          <h1 className="title">Welcome to NexTo</h1>
-          <p className="subtitle">Match. Love. Delete.</p>
-          <p className="description">A free, authentic and respectful dating experience designed for real connections.</p>
+          <h1 className="title">Bienvenue sur NexTo</h1>
+          <p className="subtitle">Matche. Aime. Supprime.</p>
+          <p className="description">Une expérience de rencontre gratuite, authentique et respectueuse conçue pour de vraies connexions.</p>
           <div className="scroll-indicator"><div className="scroll-arrow">↓</div></div>
         </div>
       </section>
