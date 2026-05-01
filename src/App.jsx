@@ -114,15 +114,15 @@ function App() {
           </div>
           <h1 className="title">Welcome to NexTo</h1>
           <p className="subtitle">Match. Love. Delete.</p>
-          <p className="description">A free, authentic and respectful dating experience designed for real connections.</p>
+          <div className="logo-hero">
+            <img src={logoSmallNexto} alt="NexTo Logo" />
+          </div>
+          <h1 className="title">Bienvenue sur NexTo</h1>
+          <p className="subtitle">Matche. Aime. Supprime.</p>
+          <p className="description">Une expérience de rencontre gratuite, authentique et respectueuse conçue pour de vraies connexions.</p>
           <div className="scroll-indicator"><div className="scroll-arrow">↓</div></div>
         </div>
       </section>
-
-      {/* VISION & SOLUTION */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
-        <div className="content">
-          <div className="emoji">💡</div>
           <h1 className="title">Vision & Solution</h1>
           <p className="subtitle">The problem</p>
           <p className="description">Dating apps have become expensive, frustrating, and filled with fake profiles.</p>
