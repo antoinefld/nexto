@@ -406,3 +406,80 @@ function App() {
 }
 
 export default App
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <section className="page-section" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+        <div className="content">
+          <div className="emoji">📧</div>
+          <h1 className="title">Get in Touch</h1>
+          <p className="subtitle">Questions? Feedback? We'd love to hear from you.</p>
+          <button className="contact-button">
+            Nous Contacter
+          </button>
+        </div>
+      </section>
+    </div>
+  )
