@@ -401,6 +401,20 @@ function App() {
           </div>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-links">
+            <a href="#terms">Terms of Service</a>
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#contact">Contact</a>
+            <a href="#about">About</a>
+          </div>
+          <div className="footer-divider"></div>
+          <p className="footer-copyright">© 2024 NexTo. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }
