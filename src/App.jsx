@@ -323,6 +323,24 @@ function App() {
                     <li>Publicité native & rewardée active</li>
                     <li>Premiers partenariats locaux</li>
                   </ul>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-logo">NexTo</div>
+          <div className="footer-links">
+            <a href="#terms" className="footer-link">Terms of Service</a>
+            <a href="#privacy" className="footer-link">Privacy Policy</a>
+            <a href="#cookies" className="footer-link">Cookie Policy</a>
+            <a href="#contact" className="footer-link">Contact Us</a>
+            <a href="#about" className="footer-link">About</a>
+          </div>
+          <div className="footer-divider"></div>
+          <div className="footer-copyright">
+            © {new Date().getFullYear()} NexTo. All rights reserved.
+          </div>
+        </div>
+      </footer>
                   <p className="objective">🎯 Objectif : valider le modèle économique et la traction</p>
                 </div>
               )}
