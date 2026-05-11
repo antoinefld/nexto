@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import logoFullNexto from './assets/logo_full_nexto.png'
 import logoSmallNexto from './assets/logo_small_nexto.png'
 import faviconNexto from './assets/favicon_io/favicon-32x32.png'
@@ -11,6 +11,19 @@ function App() {
   const [rotation, setRotation] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showAccessibilityModal, setShowAccessibilityModal] = useState(false)
+
+  const heroRef = useRef(null)
+  const visionRef = useRef(null)
+  const productRef = useRef(null)
+  const benchmarkRef = useRef(null)
+  const personasRef = useRef(null)
+  const businessRef = useRef(null)
+  const milestonesRef = useRef(null)
+  const qaRef = useRef(null)
+
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const toggleMilestone = (id) => {
     setOpenMilestone(openMilestone === id ? null : id)
@@ -107,6 +120,23 @@ function App() {
 
   return (
     <div className="app-container">
+      <nav className="navbar">
+        <div className="navbar-logo">
+          <img src={logoSmallNexto} alt="NexTo" />
+          <span>NexTo</span>
+        </div>
+        <ul className="navbar-links">
+          <li><a onClick={() => scrollToSection(heroRef)}>Home</a></li>
+          <li><a onClick={() => scrollToSection(visionRef)}>Vision</a></li>
+          <li><a onClick={() => scrollToSection(productRef)}>Product</a></li>
+          <li><a onClick={() => scrollToSection(benchmarkRef)}>Benchmark</a></li>
+          <li><a onClick={() => scrollToSection(personasRef)}>Personas</a></li>
+          <li><a onClick={() => scrollToSection(businessRef)}>Business</a></li>
+          <li><a onClick={() => scrollToSection(milestonesRef)}>Roadmap</a></li>
+          <li><a onClick={() => scrollToSection(qaRef)}>Q&A</a></li>
+        </ul>
+      </nav>
+
       <button 
         className="accessibility-button" 
         onClick={() => setShowAccessibilityModal(true)}
@@ -130,7 +160,7 @@ function App() {
         </div>
       )}
       {/* HERO */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
+      <section ref={heroRef} className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
         <div className="content">
           <div className="logo-hero">
             <img src={logoSmallNexto} alt="NexTo Logo" />
@@ -143,7 +173,7 @@ function App() {
       </section>
 
       {/* VISION & SOLUTION */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
+      <section ref={visionRef} className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
         <div className="content">
           <div className="emoji">💡</div>
           <h1 className="title">Vision & Solution</h1>
@@ -156,7 +186,7 @@ function App() {
       </section>
 
       {/* PRODUCT EXPERIENCE */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" }}>
+      <section ref={productRef} className="page-section" style={{ background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" }}>
         <div className="content">
           <div className="emoji">✨</div>
           <h1 className="title">Product Experience</h1>
@@ -171,7 +201,7 @@ function App() {
       </section>
 
       {/* BENCHMARK */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
+      <section ref={benchmarkRef} className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
         <div className="content">
           <div className="emoji">🎯</div>
           <h1 className="title">Benchmark</h1>
@@ -205,7 +235,7 @@ function App() {
       </section>
 
       {/* TARGETS & PERSONAS */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
+      <section ref={personasRef} className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
         <div className="content">
           <div className="emoji">👥</div>
           <h1 className="title">Targets & Personas</h1>
@@ -264,7 +294,7 @@ function App() {
       </section>
 
       {/* BUSINESS MODEL */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)" }}>
+      <section ref={businessRef} className="page-section" style={{ background: "linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)" }}>
         <div className="content">
           <div className="emoji">💰</div>
           <h1 className="title">Business Model</h1>
@@ -290,7 +320,7 @@ function App() {
       </section>
 
       {/* MILESTONES */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
+      <section ref={milestonesRef} className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
         <div className="content">
           <div className="emoji">🚀</div>
           <h1 className="title">Milestones & Roadmap</h1>
@@ -374,7 +404,7 @@ function App() {
       </section>
 
       {/* Q&A */}
-      <section className="page-section" style={{ background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" }}>
+      <section ref={qaRef} className="page-section" style={{ background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" }}>
         <div className="content">
           <div className="emoji">❓</div>
           <h1 className="title">Q&A</h1>
