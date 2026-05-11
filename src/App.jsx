@@ -10,6 +10,7 @@ function App() {
   const [currentPersona, setCurrentPersona] = useState(0)
   const [rotation, setRotation] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [showAccessibilityModal, setShowAccessibilityModal] = useState(false)
 
   const toggleMilestone = (id) => {
     setOpenMilestone(openMilestone === id ? null : id)
@@ -106,6 +107,28 @@ function App() {
 
   return (
     <div className="app-container">
+      <button 
+        className="accessibility-button" 
+        onClick={() => setShowAccessibilityModal(true)}
+        aria-label="Accessibility information"
+      >
+        ♿
+      </button>
+
+      {showAccessibilityModal && (
+        <div className="accessibility-modal-overlay" onClick={() => setShowAccessibilityModal(false)}>
+          <div className="accessibility-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="accessibility-modal-close" onClick={() => setShowAccessibilityModal(false)}>×</button>
+            <div className="accessibility-modal-emoji">♿</div>
+            <h2>Why Accessibility Matters</h2>
+            <p><strong>Accessibility is not optional — it's essential.</strong> Digital apps should be usable by everyone, regardless of ability, age, or context.</p>
+            <p><strong>Inclusive design</strong> means creating experiences that work for people with visual, auditory, motor, or cognitive differences. It's about ensuring no one is left behind.</p>
+            <p><strong>Better for everyone:</strong> Features like clear navigation, readable text, and keyboard support don't just help people with disabilities — they improve the experience for all users.</p>
+            <p><strong>Legal & ethical responsibility:</strong> Many countries require digital accessibility compliance. Beyond compliance, it's simply the right thing to do.</p>
+            <p><strong>At NexTo,</strong> we're committed to building an app that's welcoming, intuitive, and accessible to everyone — because real connections should be available to all.</p>
+          </div>
+        </div>
+      )}
       {/* HERO */}
       <section className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
         <div className="content">
