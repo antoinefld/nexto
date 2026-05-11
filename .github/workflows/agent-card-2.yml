@@ -1,0 +1,160 @@
+name: Validate Navbar Feature
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint -- --max-warnings=99999
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+
+  feature-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Detect and setup test runner
+        run: |
+          if [ -f "package.json" ]; then
+            TEST_SCRIPT=$(node -pe "try { const p = require('./package.json'); p.scripts?.test || '' } catch(e) { '' }")
+            if [ -n "$TEST_SCRIPT" ] && ! echo "$TEST_SCRIPT" | grep -q "no test specified"; then
+              echo "TEST_RUNNER=npm" >> $GITHUB_ENV
+            elif [ -f "vitest.config.ts" ] || [ -f "vitest.config.js" ] || grep -q '"vitest"' package.json 2>/dev/null; then
+              echo "TEST_RUNNER=vitest" >> $GITHUB_ENV
+            elif [ -f "jest.config.js" ] || [ -f "jest.config.ts" ] || grep -q '"jest"' package.json 2>/dev/null; then
+              echo "TEST_RUNNER=jest" >> $GITHUB_ENV
+            else
+              echo "TEST_RUNNER=install-vitest" >> $GITHUB_ENV
+              npm install --no-save -D vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
+              cat > vitest.config.ts << 'VITESTEOF'
+          import { defineConfig } from 'vitest/config'
+          import react from '@vitejs/plugin-react'
+
+          export default defineConfig({
+            plugins: [react()],
+            test: {
+              globals: true,
+              environment: 'jsdom',
+              setupFiles: './src/test-setup.ts',
+            },
+          })
+          VITESTEOF
+              mkdir -p src
+              cat > src/test-setup.ts << 'SETUPEOF'
+          import '@testing-library/jest-dom/vitest'
+          SETUPEOF
+            fi
+          fi
+
+      - name: Generate navbar feature tests
+        run: |
+          mkdir -p src
+          cat > src/Navbar.test.jsx << 'TESTEOF'
+          import { describe, it, expect, vi } from 'vitest'
+          import { render, screen, fireEvent } from '@testing-library/react'
+          import App from './App'
+
+          describe('Navbar Feature', () => {
+            it('renders navbar with logo and brand name', () => {
+              render(<App />)
+              expect(screen.getByAltText('NexTo')).toBeInTheDocument()
+              expect(screen.getByText('NexTo')).toBeInTheDocument()
+            })
+
+            it('renders all navigation links', () => {
+              render(<App />)
+              expect(screen.getByText('Home')).toBeInTheDocument()
+              expect(screen.getByText('Vision')).toBeInTheDocument()
+              expect(screen.getByText('Product')).toBeInTheDocument()
+              expect(screen.getByText('Benchmark')).toBeInTheDocument()
+              expect(screen.getByText('Personas')).toBeInTheDocument()
+              expect(screen.getByText('Business')).toBeInTheDocument()
+              expect(screen.getByText('Roadmap')).toBeInTheDocument()
+              expect(screen.getByText('Q&A')).toBeInTheDocument()
+            })
+
+            it('navigation links are clickable', () => {
+              render(<App />)
+              const homeLink = screen.getByText('Home')
+              expect(homeLink.tagName).toBe('A')
+              fireEvent.click(homeLink)
+            })
+
+            it('navbar has fixed positioning styles', () => {
+              const { container } = render(<App />)
+              const navbar = container.querySelector('.navbar')
+              expect(navbar).toBeInTheDocument()
+              const styles = window.getComputedStyle(navbar)
+              expect(styles.position).toBe('fixed')
+            })
+
+            it('scrollToSection is called on link click', () => {
+              const { container } = render(<App />)
+              const visionLink = screen.getByText('Vision')
+              const scrollIntoViewMock = vi.fn()
+              
+              const sections = container.querySelectorAll('section')
+              sections.forEach(section => {
+                section.scrollIntoView = scrollIntoViewMock
+              })
+
+              fireEvent.click(visionLink)
+              expect(scrollIntoViewMock).toHaveBeenCalled()
+            })
+          })
+          TESTEOF
+
+      - name: Run feature tests
+        continue-on-error: false
+        run: |
+          if [ "$TEST_RUNNER" = "npm" ]; then
+            npm test -- --run
+          elif [ "$TEST_RUNNER" = "vitest" ] || [ "$TEST_RUNNER" = "install-vitest" ]; then
+            npx vitest run
+          elif [ "$TEST_RUNNER" = "jest" ]; then
+            npx jest
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            coverage/
+            test-results/
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feature-diff
+          path: .git/
