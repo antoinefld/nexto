@@ -1,5 +1,5 @@
 import './App.css'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import logoFullNexto from './assets/logo_full_nexto.png'
 import logoSmallNexto from './assets/logo_small_nexto.png'
 import faviconNexto from './assets/favicon_io/favicon-32x32.png'
@@ -12,6 +12,12 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false)
   const [showAccessibilityModal, setShowAccessibilityModal] = useState(false)
 
+  const [showSurpriseModal, setShowSurpriseModal] = useState(false)
+  const [surpriseName, setSurpriseName] = useState(() => localStorage.getItem('surprise_name') || '')
+  const [surpriseBirthday, setSurpriseBirthday] = useState(() => localStorage.getItem('surprise_birthday') || '')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [confettiPieces, setConfettiPieces] = useState([])
+
   const heroRef = useRef(null)
   const visionRef = useRef(null)
   const productRef = useRef(null)
@@ -20,6 +26,78 @@ function App() {
   const businessRef = useRef(null)
   const milestonesRef = useRef(null)
   const qaRef = useRef(null)
+
+  const welcomeMessages = [
+    "🌟 Bienvenue dans l'aventure NexTo, {name} ! Tu vas adorer ce que tu vas découvrir !",
+    "💖 Hey {name} ! On est tellement contents de t'avoir ici. Prépare-toi à être surpris(e) !",
+    "🎉 {name}, tu es exactement la personne qu'on attendait ! Bienvenue dans la famille NexTo !",
+    "✨ Salut {name} ! Le monde des vraies connexions t'attend. Let's go !",
+    "🚀 {name}, ta présence illumine NexTo ! Bienvenue à bord de cette belle aventure !",
+    "🌈 Coucou {name} ! NexTo est fait pour des gens comme toi. On est ravis de t'accueillir !",
+    "💫 {name}, tu es unique et NexTo le sait ! Bienvenue dans un espace pensé pour toi !",
+    "🎊 Quelle joie de t'accueillir, {name} ! NexTo va changer ta façon de faire des rencontres !",
+    "🌸 {name}, bienvenue ! Ici, les connexions sont vraies et les sourires authentiques !",
+    "⭐ Hey {name} ! Tu fais maintenant partie de la communauté NexTo. Profite bien !",
+  ]
+
+  const getRandomWelcome = useCallback((name) => {
+    const displayName = name && name.trim() ? name.trim() : 'toi'
+    const randomMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
+    return randomMsg.replace('{name}', displayName)
+  }, [])
+
+  const generateConfetti = useCallback(() => {
+    const colors = ['#F28A72', '#992F70', '#f093fb', '#f5576c', '#fa709a', '#fee140', '#ff6b6b', '#feca57', '#ffffff', '#ffb3c6']
+    const shapes = ['circle', 'square', 'triangle']
+    const pieces = Array.from({ length: 80 }, (_, i) => ({
+      id: i,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
+      left: Math.random() * 100,
+      delay: Math.random() * 1.5,
+      duration: 2 + Math.random() * 2,
+      size: 6 + Math.random() * 10,
+      rotation: Math.random() * 360,
+    }))
+    setConfettiPieces(pieces)
+    setTimeout(() => setConfettiPieces([]), 4000)
+  }, [])
+
+  const openSurpriseModal = useCallback(() => {
+    const name = localStorage.getItem('surprise_name') || ''
+    const birthday = localStorage.getItem('surprise_birthday') || ''
+    setSurpriseName(name)
+    setSurpriseBirthday(birthday)
+    setWelcomeMessage(getRandomWelcome(name))
+    setShowSurpriseModal(true)
+    generateConfetti()
+  }, [getRandomWelcome, generateConfetti])
+
+  const closeSurpriseModal = useCallback(() => {
+    setShowSurpriseModal(false)
+  }, [])
+
+  const handleSurpriseNameChange = (e) => {
+    const val = e.target.value
+    setSurpriseName(val)
+    localStorage.setItem('surprise_name', val)
+  }
+
+  const handleSurpriseBirthdayChange = (e) => {
+    const val = e.target.value
+    setSurpriseBirthday(val)
+    localStorage.setItem('surprise_birthday', val)
+  }
+
+  const getTodayBirthdayMessage = () => {
+    if (!surpriseBirthday) return null
+    const today = new Date()
+    const bday = new Date(surpriseBirthday)
+    if (today.getDate() === bday.getDate() && today.getMonth() === bday.getMonth()) {
+      return `🎂 Joyeux anniversaire ${surpriseName || ''} ! 🎉`
+    }
+    return null
+  }
 
   const scrollToSection = (ref) => {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -121,6 +199,13 @@ function App() {
   return (
     <div className="app-container">
       <nav className="navbar">
+        <button
+          className="surprise-button"
+          onClick={openSurpriseModal}
+          aria-label="Surprise !"
+        >
+          🎁
+        </button>
         <div className="navbar-logo">
           <img src={logoSmallNexto} alt="NexTo" />
           <span>NexTo</span>
@@ -136,6 +221,31 @@ function App() {
           <li><a onClick={() => scrollToSection(qaRef)}>Q&A</a></li>
         </ul>
       </nav>
+
+      {/* Confetti overlay */}
+      {confettiPieces.length > 0 && (
+        <div className="confetti-container" aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <div
+              key={piece.id}
+              className={`confetti-piece confetti-${piece.shape}`}
+              style={{
+                left: `${piece.left}%`,
+                backgroundColor: piece.shape !== 'triangle' ? piece.color : 'transparent',
+                borderBottomColor: piece.shape === 'triangle' ? piece.color : undefined,
+                width: piece.shape !== 'triangle' ? `${piece.size}px` : 0,
+                height: piece.shape !== 'triangle' ? `${piece.size}px` : 0,
+                borderLeftWidth: piece.shape === 'triangle' ? `${piece.size / 2}px` : undefined,
+                borderRightWidth: piece.shape === 'triangle' ? `${piece.size / 2}px` : undefined,
+                borderBottomWidth: piece.shape === 'triangle' ? `${piece.size}px` : undefined,
+                animationDelay: `${piece.delay}s`,
+                animationDuration: `${piece.duration}s`,
+                transform: `rotate(${piece.rotation}deg)`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <button 
         className="accessibility-button" 
@@ -159,6 +269,60 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* SURPRISE MODAL */}
+      {showSurpriseModal && (
+        <div className="surprise-modal-overlay" onClick={closeSurpriseModal}>
+          <div className="surprise-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="surprise-modal-close" onClick={closeSurpriseModal}>×</button>
+
+            <div className="surprise-modal-header">
+              <div className="surprise-modal-emoji">🎉</div>
+              <h2>Surprise !!!</h2>
+              {getTodayBirthdayMessage() && (
+                <div className="surprise-birthday-banner">{getTodayBirthdayMessage()}</div>
+              )}
+            </div>
+
+            <div className="surprise-welcome-message">
+              <p>{welcomeMessage}</p>
+            </div>
+
+            <div className="surprise-form">
+              <div className="surprise-form-group">
+                <label htmlFor="surprise-name">👤 Ton prénom</label>
+                <input
+                  id="surprise-name"
+                  type="text"
+                  placeholder="Entre ton prénom..."
+                  value={surpriseName}
+                  onChange={handleSurpriseNameChange}
+                  className="surprise-input"
+                />
+              </div>
+              <div className="surprise-form-group">
+                <label htmlFor="surprise-birthday">🎂 Ton anniversaire</label>
+                <input
+                  id="surprise-birthday"
+                  type="date"
+                  value={surpriseBirthday}
+                  onChange={handleSurpriseBirthdayChange}
+                  className="surprise-input"
+                />
+              </div>
+              <button
+                className="surprise-refresh-btn"
+                onClick={() => setWelcomeMessage(getRandomWelcome(surpriseName))}
+              >
+                🔄 Nouveau message
+              </button>
+            </div>
+
+            <p className="surprise-footer">✨ Tes infos sont sauvegardées automatiquement ✨</p>
+          </div>
+        </div>
+      )}
+
       {/* HERO */}
       <section ref={heroRef} className="page-section" style={{ background: "linear-gradient(135deg, #F28A72 0%, #992F70 100%)" }}>
         <div className="content">
