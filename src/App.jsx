@@ -172,6 +172,25 @@ function App() {
         </div>
       </section>
 
+      {/* WELCOME */}
+      <section className="page-section" style={{ background: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" }}>
+        <div className="content">
+          <div className="emoji">👋</div>
+          <h1 className="title">Bienvenue sur NexTo</h1>
+          <p className="subtitle">L'application de rencontres pensée pour vous</p>
+          <p className="description">
+            NexTo est une application de rencontres 100% gratuite, conçue pour favoriser des connexions authentiques et sincères. Fini les profils faux, les paywalls frustrants et les algorithmes opaques — NexTo met l'humain au cœur de chaque interaction.
+          </p>
+          <div className="features">
+            <div className="feature">💬 Discussions vraies</div>
+            <div className="feature">🔒 Profils vérifiés</div>
+            <div className="feature">🎯 Matching par valeurs</div>
+            <div className="feature">🆓 Totalement gratuit</div>
+          </div>
+          <div className="scroll-indicator"><div className="scroll-arrow">↓</div></div>
+        </div>
+      </section>
+
       {/* VISION & SOLUTION */}
       <section ref={visionRef} className="page-section" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
         <div className="content">
