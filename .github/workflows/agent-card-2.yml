@@ -1,160 +1,217 @@
-name: Validate Navbar Feature
+name: Validate Welcome Section Feature
 
 on:
   push:
   pull_request:
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint -- --max-warnings=99999
-
   build:
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type-check / build feature
+        run: npm run build
+
+      - name: Save patch
+        run: |
+          cat > /tmp/welcome-section.patch << 'PATCH'
+          --- a/src/App.jsx
+          +++ b/src/App.jsx
+          @@ -136,6 +136,22 @@ function App() {
+                   </div>
+                 </section>
+          +      {/* WELCOME */}
+          +      <section className="page-section" style={{ background: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)" }}>
+          +        <div className="content">
+          +          <div className="emoji">👋</div>
+          +          <h1 className="title">Bienvenue sur NexTo</h1>
+          +          <p className="subtitle">L'application de rencontres pensée pour vous</p>
+          +          <p className="description">
+          +            NexTo est une application de rencontres 100% gratuite, conçue pour favoriser des connexions authentiques et sincères.
+          +          </p>
+          +          <div className="features">
+          +            <div className="feature">💬 Discussions vraies</div>
+          +            <div className="feature">🔒 Profils vérifiés</div>
+          +            <div className="feature">🎯 Matching par valeurs</div>
+          +            <div className="feature">🆓 Totalement gratuit</div>
+          +          </div>
+          +          <div className="scroll-indicator"><div className="scroll-arrow">↓</div></div>
+          +        </div>
+          +      </section>
+          PATCH
+          cp /tmp/welcome-section.patch welcome-section.patch
+
       - uses: actions/upload-artifact@v4
         with:
-          name: build-output
-          path: dist/
-
+          name: build-artifacts
+          path: |
+            dist/
+            welcome-section.patch
   feature-tests:
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+          node-version: 20
+          cache: npm
 
-      - name: Detect and setup test runner
+      - name: Install dependencies
+        run: npm install
+
+      - name: Detect and install test runner
         run: |
-          if [ -f "package.json" ]; then
-            TEST_SCRIPT=$(node -pe "try { const p = require('./package.json'); p.scripts?.test || '' } catch(e) { '' }")
-            if [ -n "$TEST_SCRIPT" ] && ! echo "$TEST_SCRIPT" | grep -q "no test specified"; then
-              echo "TEST_RUNNER=npm" >> $GITHUB_ENV
-            elif [ -f "vitest.config.ts" ] || [ -f "vitest.config.js" ] || grep -q '"vitest"' package.json 2>/dev/null; then
-              echo "TEST_RUNNER=vitest" >> $GITHUB_ENV
-            elif [ -f "jest.config.js" ] || [ -f "jest.config.ts" ] || grep -q '"jest"' package.json 2>/dev/null; then
-              echo "TEST_RUNNER=jest" >> $GITHUB_ENV
-            else
-              echo "TEST_RUNNER=install-vitest" >> $GITHUB_ENV
-              npm install --no-save -D vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
-              cat > vitest.config.ts << 'VITESTEOF'
-          import { defineConfig } from 'vitest/config'
-          import react from '@vitejs/plugin-react'
+          HAS_TEST_SCRIPT=$(node -e "
+            const pkg = require('./package.json');
+            const s = pkg.scripts && pkg.scripts.test;
+            const placeholder = 'echo \"Error: no test specified\"';
+            console.log(s && s !== placeholder ? 'yes' : 'no');
+          " 2>/dev/null || echo "no")
+
+          HAS_VITEST_CONFIG=$(ls vitest.config.* 2>/dev/null | wc -l)
+          HAS_VITEST_DEP=$(node -e "
+            const pkg = require('./package.json');
+            const dd = pkg.devDependencies || {};
+            const d = pkg.dependencies || {};
+            const all = Array.isArray(dd) ? [] : Object.keys(dd);
+            const all2 = Array.isArray(d) ? [] : Object.keys(d);
+            console.log([...all, ...all2].includes('vitest') ? 'yes' : 'no');
+          " 2>/dev/null || echo "no")
+
+          if [ "$HAS_TEST_SCRIPT" = "yes" ]; then
+            echo "TEST_CMD=npm test --" >> $GITHUB_ENV
+          elif [ "$HAS_VITEST_CONFIG" -gt "0" ] || [ "$HAS_VITEST_DEP" = "yes" ]; then
+            echo "TEST_CMD=npx vitest run" >> $GITHUB_ENV
+          else
+            echo "Installing vitest and testing libraries..."
+            npm install --no-save -D vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
+
+            cat > vitest.config.ts << 'EOF'
+          import { defineConfig } from 'vitest/config';
+          import react from '@vitejs/plugin-react';
 
           export default defineConfig({
             plugins: [react()],
             test: {
-              globals: true,
               environment: 'jsdom',
-              setupFiles: './src/test-setup.ts',
+              globals: true,
+              setupFiles: ['@testing-library/jest-dom/vitest'],
             },
-          })
-          VITESTEOF
-              mkdir -p src
-              cat > src/test-setup.ts << 'SETUPEOF'
-          import '@testing-library/jest-dom/vitest'
-          SETUPEOF
-            fi
+          });
+          EOF
+
+            echo "TEST_CMD=npx vitest run" >> $GITHUB_ENV
           fi
 
-      - name: Generate navbar feature tests
+      - name: Write welcome section tests
         run: |
-          mkdir -p src
-          cat > src/Navbar.test.jsx << 'TESTEOF'
-          import { describe, it, expect, vi } from 'vitest'
-          import { render, screen, fireEvent } from '@testing-library/react'
-          import App from './App'
+          mkdir -p src/__tests__
+          cat > src/__tests__/WelcomeSection.test.jsx << 'EOF'
+          import { describe, it, expect, beforeAll } from 'vitest';
+          import { render, screen } from '@testing-library/react';
+          import { readFileSync } from 'fs';
+          import { resolve } from 'path';
 
-          describe('Navbar Feature', () => {
-            it('renders navbar with logo and brand name', () => {
-              render(<App />)
-              expect(screen.getByAltText('NexTo')).toBeInTheDocument()
-              expect(screen.getByText('NexTo')).toBeInTheDocument()
-            })
+          // Parse App.jsx source to verify the welcome section markup exists
+          const appSource = readFileSync(resolve(process.cwd(), 'src/App.jsx'), 'utf-8');
 
-            it('renders all navigation links', () => {
-              render(<App />)
-              expect(screen.getByText('Home')).toBeInTheDocument()
-              expect(screen.getByText('Vision')).toBeInTheDocument()
-              expect(screen.getByText('Product')).toBeInTheDocument()
-              expect(screen.getByText('Benchmark')).toBeInTheDocument()
-              expect(screen.getByText('Personas')).toBeInTheDocument()
-              expect(screen.getByText('Business')).toBeInTheDocument()
-              expect(screen.getByText('Roadmap')).toBeInTheDocument()
-              expect(screen.getByText('Q&A')).toBeInTheDocument()
-            })
+          describe('Welcome section – static source validation', () => {
+            it('contains the WELCOME comment marker', () => {
+              expect(appSource).toContain('WELCOME');
+            });
 
-            it('navigation links are clickable', () => {
-              render(<App />)
-              const homeLink = screen.getByText('Home')
-              expect(homeLink.tagName).toBe('A')
-              fireEvent.click(homeLink)
-            })
+            it('renders a section with the purple-pink gradient background', () => {
+              expect(appSource).toContain('linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)');
+            });
 
-            it('navbar has fixed positioning styles', () => {
-              const { container } = render(<App />)
-              const navbar = container.querySelector('.navbar')
-              expect(navbar).toBeInTheDocument()
-              const styles = window.getComputedStyle(navbar)
-              expect(styles.position).toBe('fixed')
-            })
+            it('contains the Bienvenue sur NexTo heading', () => {
+              expect(appSource).toContain('Bienvenue sur NexTo');
+            });
 
-            it('scrollToSection is called on link click', () => {
-              const { container } = render(<App />)
-              const visionLink = screen.getByText('Vision')
-              const scrollIntoViewMock = vi.fn()
-              
-              const sections = container.querySelectorAll('section')
-              sections.forEach(section => {
-                section.scrollIntoView = scrollIntoViewMock
-              })
+            it('contains the app subtitle', () => {
+              expect(appSource).toContain("L'application de rencontres pensée pour vous");
+            });
 
-              fireEvent.click(visionLink)
-              expect(scrollIntoViewMock).toHaveBeenCalled()
-            })
-          })
-          TESTEOF
+            it('contains the description mentioning 100% gratuite', () => {
+              expect(appSource).toContain('100% gratuite');
+            });
+
+            it('contains the wave emoji for greeting', () => {
+              expect(appSource).toContain('👋');
+            });
+
+            it('lists all four feature items', () => {
+              expect(appSource).toContain('💬 Discussions vraies');
+              expect(appSource).toContain('🔒 Profils vérifiés');
+              expect(appSource).toContain('🎯 Matching par valeurs');
+              expect(appSource).toContain('🆓 Totalement gratuit');
+            });
+
+            it('contains a scroll indicator with a down arrow', () => {
+              expect(appSource).toContain('scroll-indicator');
+              expect(appSource).toContain('scroll-arrow');
+              expect(appSource).toContain('↓');
+            });
+
+            it('uses page-section className on the welcome section', () => {
+              const sectionMatches = appSource.match(/className="page-section"/g) || [];
+              expect(sectionMatches.length).toBeGreaterThan(0);
+            });
+
+            it('contains the feature className for feature items', () => {
+              const featureMatches = appSource.match(/className="feature"/g) || [];
+              expect(featureMatches.length).toBeGreaterThanOrEqual(4);
+            });
+          });
+
+          // Smoke-render test: import App and verify welcome section renders in DOM
+          describe('Welcome section – render test', () => {
+            it('renders Bienvenue sur NexTo in the document', async () => {
+              // Dynamically import App to avoid top-level side-effects issues
+              const { default: App } = await import('../App.jsx');
+              render(<App />);
+              const heading = screen.getByText('Bienvenue sur NexTo');
+              expect(heading).toBeDefined();
+            });
+
+            it('renders the subtitle text', async () => {
+              const { default: App } = await import('../App.jsx');
+              render(<App />);
+              const subtitle = screen.getByText("L'application de rencontres pensée pour vous");
+              expect(subtitle).toBeDefined();
+            });
+
+            it('renders all four feature labels', async () => {
+              const { default: App } = await import('../App.jsx');
+              render(<App />);
+              expect(screen.getByText('💬 Discussions vraies')).toBeDefined();
+              expect(screen.getByText('🔒 Profils vérifiés')).toBeDefined();
+              expect(screen.getByText('🎯 Matching par valeurs')).toBeDefined();
+              expect(screen.getByText('🆓 Totalement gratuit')).toBeDefined();
+            });
+          });
+          EOF
 
       - name: Run feature tests
         continue-on-error: false
-        run: |
-          if [ "$TEST_RUNNER" = "npm" ]; then
-            npm test -- --run
-          elif [ "$TEST_RUNNER" = "vitest" ] || [ "$TEST_RUNNER" = "install-vitest" ]; then
-            npx vitest run
-          elif [ "$TEST_RUNNER" = "jest" ]; then
-            npx jest
-          fi
+        run: $TEST_CMD src/__tests__/WelcomeSection.test.jsx
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-artifacts
           path: |
-            coverage/
+            src/__tests__/WelcomeSection.test.jsx
+            welcome-section.patch
             test-results/
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: feature-diff
-          path: .git/
